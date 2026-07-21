@@ -46,7 +46,7 @@ class ImageUploadService {
         'branch': _branch,
       };
       if (sha != null) {
-        body['sha'] = sha; // Required for update
+        body['sha'] = sha;
       }
 
       final res = await http.put(
@@ -60,7 +60,7 @@ class ImageUploadService {
       ).timeout(const Duration(seconds: 30));
 
       if (res.statusCode == 201 || res.statusCode == 200) {
-        // Return raw GitHub URL
+        // Return GitHub Pages URL (not raw)
         return 'https://$_owner.github.io/$_repo/images/$fileName';
       } else {
         print('Upload failed: ${res.statusCode} - ${res.body}');
