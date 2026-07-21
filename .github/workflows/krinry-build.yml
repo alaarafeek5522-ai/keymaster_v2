@@ -48,6 +48,23 @@ jobs:
         run: |
           sed -i 's/android:label="[^"]*"/android:label="Abbas"/g' android/app/src/main/AndroidManifest.xml
 
+      - name: Set package name to com.alaa.keymaster
+        run: |
+          sed -i 's/applicationId .*/applicationId "com.alaa.keymaster"/g' android/app/build.gradle
+
+      - name: Copy app icon
+        run: |
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          cp assets/images/app_icon.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png || true
+          cp assets/images/app_icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png || true
+          cp assets/images/app_icon.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png || true
+          cp assets/images/app_icon.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png || true
+          cp assets/images/app_icon.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png || true
+
       - name: Build
         run: |
           TYPE="${{ github.event.inputs.build_type }}"
