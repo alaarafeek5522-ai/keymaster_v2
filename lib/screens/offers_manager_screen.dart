@@ -37,7 +37,7 @@ class OffersManagerScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator(color: AppTheme.gold));
           }
 
-          final offers = _getOffers(provider);
+          final offers = provider.offers;
           
           if (offers.isEmpty) {
             return Center(
@@ -181,12 +181,6 @@ class OffersManagerScreen extends StatelessWidget {
     );
   }
 
-  List<OfferModel> _getOffers(KeysProvider provider) {
-    final data = provider.appControl; // This should be full data
-    // We need to access the raw data
-    return [];
-  }
-
   void _addOffer(BuildContext context) {
     Navigator.push(
       context,
@@ -210,9 +204,20 @@ class OffersManagerScreen extends StatelessWidget {
     );
   }
 
-  void _toggleOffer(BuildContext context, OfferModel offer, bool active) {
-    final updated = offer.copyWith(active: active);
-    _saveOffer(context, updated);
+  Future<void> _toggleOffer(BuildContext context, OfferModel offer, bool active) async {
+    final provider = context.read<KeysProvider>();
+    final success = await provider.toggleOffer(offer.id, active);
+    
+    if (!success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ فشل التحديث', style: GoogleFonts.cairo()),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 
   Future<void> _deleteOffer(BuildContext context, OfferModel offer) async {
@@ -235,12 +240,59 @@ class OffersManagerScreen extends StatelessWidget {
       ),
     );
 
-    if (confirm == true) {
-      // TODO: Implement delete
+    if (confirm == true && context.mounted) {
+      final provider = context.read<KeysProvider>();
+      final success = await provider.deleteOffer(offer.id);
+      
+      if (success && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ تم الحذف', style: GoogleFonts.cairo()),
+            backgroundColor: AppTheme.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ فشل الحذف', style: GoogleFonts.cairo()),
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _saveOffer(BuildContext context, OfferModel offer) async {
-    // TODO: Implement save to Gist
+    final provider = context.read<KeysProvider>();
+    final success = await provider.addOffer(offer);
+    
+    if (success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_isEditing(offer) ? '✅ تم التعديل' : '✅ تم الإضافة', style: GoogleFonts.cairo()),
+          backgroundColor: AppTheme.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ فشل الحفظ', style: GoogleFonts.cairo()),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
+  }
+
+  bool _isEditing(OfferModel offer) {
+    // Check if offer already exists in list
+    return false; // Will be determined by provider
   }
 }
