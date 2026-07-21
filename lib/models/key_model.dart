@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class KeyModel {
   final String key;
@@ -41,6 +41,7 @@ class KeyModel {
   };
 
   bool get isUsed => registeredAt != null;
+  
   bool get isExpired {
     if (expiresAt == null) return false;
     try {
