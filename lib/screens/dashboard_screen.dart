@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import 'keys_list_screen.dart';
 import 'add_keys_screen.dart';
 import 'app_control_screen.dart';
+import 'offers_manager_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -119,6 +120,14 @@ class DashboardScreen extends StatelessWidget {
                         title: 'قائمة المفاتيح',
                         subtitle: 'عرض وإدارة المفاتيح',
                         onTap: () => Navigator.push(context, _SlideRoute(page: const KeysListScreen())),
+                      ),
+                      const SizedBox(height: 12),
+                      _MenuButton(
+                        icon: Icons.local_fire_department_rounded,
+                        color: const Color(0xFFFF6B35),
+                        title: 'إدارة العروض 🔥',
+                        subtitle: 'إضافة وتعديل عروض نار',
+                        onTap: () => Navigator.push(context, _SlideRoute(page: const OffersManagerScreen())),
                       ),
                       const SizedBox(height: 12),
                       _MenuButton(

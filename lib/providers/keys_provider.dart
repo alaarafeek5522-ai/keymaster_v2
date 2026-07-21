@@ -1,16 +1,19 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/key_model.dart';
+import '../models/offer_model.dart';
 import '../services/gist_service.dart';
 
 class KeysProvider extends ChangeNotifier {
   Map<String, KeyModel> _keys = {};
   Map<String, dynamic> _appControl = {};
+  List<OfferModel> _offers = [];
   bool _isLoading = false;
   String? _error;
 
   Map<String, KeyModel> get keys => _keys;
   Map<String, dynamic> get appControl => _appControl;
+  List<OfferModel> get offers => _offers;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -38,6 +41,9 @@ class KeysProvider extends ChangeNotifier {
       _keys[key] = KeyModel.fromJson(key, value);
     });
 
+    final offersData = data['offers'] as List? ?? [];
+    _offers = offersData.map((o) => OfferModel.fromJson(o)).toList();
+
     _appControl = data['app_control'] as Map<String, dynamic>? ?? {};
     _isLoading = false;
     notifyListeners();
@@ -51,6 +57,9 @@ class KeysProvider extends ChangeNotifier {
     
     for (int i = 0; i < count; i++) {
       final key = _generateKey();
+      while (keysData.containsKey(key)) {
+        key == _generateKey();
+      }
       keysData[key] = {
         'active': true,
         'duration': duration,
@@ -114,6 +123,62 @@ class KeysProvider extends ChangeNotifier {
     if (data == null) return false;
 
     data['app_control'] = {...data['app_control'] ?? {}, ...control};
+    
+    final success = await GistService.updateData(data);
+    if (success) await loadData();
+    return success;
+  }
+
+  // ─── OFFERS ─────────────────────────────────────────────────────
+
+  Future<bool> addOffer(OfferModel offer) async {
+    final data = await GistService.fetchData();
+    if (data == null) return false;
+
+    final offers = (data['offers'] as List? ?? []).map((o) => OfferModel.fromJson(o)).toList();
+    
+    // Update if exists, else add
+    final index = offers.indexWhere((o) => o.id == offer.id);
+    if (index >= 0) {
+      offers[index] = offer;
+    } else {
+      offers.add(offer);
+    }
+
+    data['offers'] = offers.map((o) => o.toJson()).toList();
+    
+    final success = await GistService.updateData(data);
+    if (success) await loadData();
+    return success;
+  }
+
+  Future<bool> deleteOffer(String offerId) async {
+    final data = await GistService.fetchData();
+    if (data == null) return false;
+
+    final offers = (data['offers'] as List? ?? [])
+        .map((o) => OfferModel.fromJson(o))
+        .where((o) => o.id != offerId)
+        .toList();
+
+    data['offers'] = offers.map((o) => o.toJson()).toList();
+    
+    final success = await GistService.updateData(data);
+    if (success) await loadData();
+    return success;
+  }
+
+  Future<bool> toggleOffer(String offerId, bool active) async {
+    final data = await GistService.fetchData();
+    if (data == null) return false;
+
+    final offers = (data['offers'] as List? ?? []).map((o) => OfferModel.fromJson(o)).toList();
+    final index = offers.indexWhere((o) => o.id == offerId);
+    if (index >= 0) {
+      offers[index] = offers[index].copyWith(active: active);
+    }
+
+    data['offers'] = offers.map((o) => o.toJson()).toList();
     
     final success = await GistService.updateData(data);
     if (success) await loadData();
