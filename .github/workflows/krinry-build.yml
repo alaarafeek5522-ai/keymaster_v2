@@ -6,7 +6,7 @@ on:
       build_type:
         description: 'Build type'
         required: true
-        default: 'debug'
+        default: 'release'
         type: choice
         options: [debug, profile, release]
       output_type:
@@ -15,12 +15,6 @@ on:
         default: 'apk'
         type: choice
         options: [apk, appbundle, apk-split]
-      target_platform:
-        description: 'Target platform'
-        required: false
-        default: 'all'
-        type: choice
-        options: [all, android-arm64, android-arm, android-x64]
 
 jobs:
   build:
@@ -42,40 +36,24 @@ jobs:
         run: flutter pub get
 
       - name: Create android folder
-        run: flutter create --platforms android .
+        run: flutter create --platforms android --org com.alaa --project-name keymaster_v2 .
 
-      - name: Change app label to Abbas
+      - name: Add permissions
         run: |
-          sed -i 's/android:label="[^"]*"/android:label="Abbas"/g' android/app/src/main/AndroidManifest.xml
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"\/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"\/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"\/>\n    <uses-permission android:name="android.permission.CAMERA"\/>\n    <application/' $MANIFEST
 
-      - name: Set package name to com.alaa.keymaster
+      - name: Set app label
         run: |
-          sed -i 's/applicationId .*/applicationId "com.alaa.keymaster"/g' android/app/build.gradle
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          sed -i 's/android:label="[^"]*"/android:label="KeyMaster V2"/' $MANIFEST
 
-      - name: Copy app icon
-        run: |
-          mkdir -p android/app/src/main/res/mipmap-hdpi
-          mkdir -p android/app/src/main/res/mipmap-mdpi
-          mkdir -p android/app/src/main/res/mipmap-xhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
-          cp assets/images/app_icon.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png || true
-          cp assets/images/app_icon.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png || true
-          cp assets/images/app_icon.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png || true
-          cp assets/images/app_icon.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png || true
-          cp assets/images/app_icon.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png || true
-
-      - name: Build
+      - name: Build APK
         run: |
           TYPE="${{ github.event.inputs.build_type }}"
           OUT="${{ github.event.inputs.output_type }}"
-          PLAT="${{ github.event.inputs.target_platform }}"
           if [ "$OUT" = "apk" ]; then
-            if [ "$PLAT" != "all" ]; then
-              flutter build apk --$TYPE --target-platform $PLAT
-            else
-              flutter build apk --$TYPE
-            fi
+            flutter build apk --$TYPE
           elif [ "$OUT" = "apk-split" ]; then
             flutter build apk --$TYPE --split-per-abi
           elif [ "$OUT" = "appbundle" ]; then

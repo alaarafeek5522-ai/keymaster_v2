@@ -56,9 +56,9 @@ class KeysProvider extends ChangeNotifier {
     final keysData = data['keys'] as Map<String, dynamic>? ?? {};
     
     for (int i = 0; i < count; i++) {
-      final key = _generateKey();
+      var key = _generateKey();
       while (keysData.containsKey(key)) {
-        key == _generateKey();
+        key = _generateKey();  // ✅ تم التصليح هنا
       }
       keysData[key] = {
         'active': true,
@@ -137,7 +137,6 @@ class KeysProvider extends ChangeNotifier {
 
     final offers = (data['offers'] as List? ?? []).map((o) => OfferModel.fromJson(o)).toList();
     
-    // Update if exists, else add
     final index = offers.indexWhere((o) => o.id == offer.id);
     if (index >= 0) {
       offers[index] = offer;
@@ -188,13 +187,9 @@ class KeysProvider extends ChangeNotifier {
   String _generateKey() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rand = Random();
-    String key;
-    do {
-      final parts = List.generate(3, (_) {
-        return List.generate(4, (_) => chars[rand.nextInt(chars.length)]).join();
-      });
-      key = parts.join('-');
-    } while (_keys.containsKey(key));
-    return key;
+    final parts = List.generate(3, (_) {
+      return List.generate(4, (_) => chars[rand.nextInt(chars.length)]).join();
+    });
+    return parts.join('-');
   }
 }

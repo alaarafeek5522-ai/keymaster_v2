@@ -15,11 +15,12 @@ class AppControlScreen extends StatefulWidget {
 class _AppControlScreenState extends State<AppControlScreen> {
   bool _forceStop = false;
   bool _forceUpdate = false;
-  String _stopMsg = '';
-  String _updateMsg = '';
-  String _updateUrl = '';
-  String _message = '';
-  String _messageTitle = '';
+
+  late final TextEditingController _stopMsgCtrl;
+  late final TextEditingController _updateMsgCtrl;
+  late final TextEditingController _updateUrlCtrl;
+  late final TextEditingController _messageCtrl;
+  late final TextEditingController _messageTitleCtrl;
 
   bool _isLoading = false;
 
@@ -29,11 +30,22 @@ class _AppControlScreenState extends State<AppControlScreen> {
     final control = context.read<KeysProvider>().appControl;
     _forceStop = control['force_stop'] == true;
     _forceUpdate = control['force_update'] == true;
-    _stopMsg = control['force_stop_msg']?.toString() ?? '';
-    _updateMsg = control['force_update_msg']?.toString() ?? '';
-    _updateUrl = control['update_url']?.toString() ?? '';
-    _message = control['message']?.toString() ?? '';
-    _messageTitle = control['message_title']?.toString() ?? '';
+
+    _stopMsgCtrl = TextEditingController(text: control['force_stop_msg']?.toString() ?? 'التطبيق موقوف مؤقتاً');
+    _updateMsgCtrl = TextEditingController(text: control['force_update_msg']?.toString() ?? 'يوجد تحديث جديد');
+    _updateUrlCtrl = TextEditingController(text: control['update_url']?.toString() ?? '');
+    _messageCtrl = TextEditingController(text: control['message']?.toString() ?? '');
+    _messageTitleCtrl = TextEditingController(text: control['message_title']?.toString() ?? 'تنبيه');
+  }
+
+  @override
+  void dispose() {
+    _stopMsgCtrl.dispose();
+    _updateMsgCtrl.dispose();
+    _updateUrlCtrl.dispose();
+    _messageCtrl.dispose();
+    _messageTitleCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _save() async {
@@ -42,12 +54,12 @@ class _AppControlScreenState extends State<AppControlScreen> {
 
     final success = await context.read<KeysProvider>().updateAppControl({
       'force_stop': _forceStop,
-      'force_stop_msg': _stopMsg.isEmpty ? 'التطبيق موقوف مؤقتاً' : _stopMsg,
+      'force_stop_msg': _stopMsgCtrl.text.isEmpty ? 'التطبيق موقوف مؤقتاً' : _stopMsgCtrl.text,
       'force_update': _forceUpdate,
-      'force_update_msg': _updateMsg.isEmpty ? 'يوجد تحديث جديد' : _updateMsg,
-      'update_url': _updateUrl,
-      'message': _message,
-      'message_title': _messageTitle.isEmpty ? 'تنبيه' : _messageTitle,
+      'force_update_msg': _updateMsgCtrl.text.isEmpty ? 'يوجد تحديث جديد' : _updateMsgCtrl.text,
+      'update_url': _updateUrlCtrl.text,
+      'message': _messageCtrl.text,
+      'message_title': _messageTitleCtrl.text.isEmpty ? 'تنبيه' : _messageTitleCtrl.text,
     });
 
     setState(() => _isLoading = false);
@@ -107,8 +119,7 @@ class _AppControlScreenState extends State<AppControlScreen> {
                   if (_forceStop) ...[
                     const SizedBox(height: 8),
                     TextField(
-                      onChanged: (v) => _stopMsg = v,
-                      controller: TextEditingController(text: _stopMsg),
+                      controller: _stopMsgCtrl,
                       style: GoogleFonts.cairo(color: AppTheme.textPrimary),
                       decoration: InputDecoration(
                         hintText: 'رسالة الإيقاف',
@@ -139,8 +150,7 @@ class _AppControlScreenState extends State<AppControlScreen> {
                   if (_forceUpdate) ...[
                     const SizedBox(height: 8),
                     TextField(
-                      onChanged: (v) => _updateMsg = v,
-                      controller: TextEditingController(text: _updateMsg),
+                      controller: _updateMsgCtrl,
                       style: GoogleFonts.cairo(color: AppTheme.textPrimary),
                       decoration: InputDecoration(
                         hintText: 'رسالة التحديث',
@@ -149,8 +159,7 @@ class _AppControlScreenState extends State<AppControlScreen> {
                     ),
                     const SizedBox(height: 8),
                     TextField(
-                      onChanged: (v) => _updateUrl = v,
-                      controller: TextEditingController(text: _updateUrl),
+                      controller: _updateUrlCtrl,
                       style: GoogleFonts.cairo(color: AppTheme.textPrimary),
                       decoration: InputDecoration(
                         hintText: 'رابط التحديث',
@@ -171,8 +180,7 @@ class _AppControlScreenState extends State<AppControlScreen> {
               child: Column(
                 children: [
                   TextField(
-                    onChanged: (v) => _messageTitle = v,
-                    controller: TextEditingController(text: _messageTitle),
+                    controller: _messageTitleCtrl,
                     style: GoogleFonts.cairo(color: AppTheme.textPrimary),
                     decoration: InputDecoration(
                       hintText: 'عنوان الرسالة',
@@ -181,8 +189,7 @@ class _AppControlScreenState extends State<AppControlScreen> {
                   ),
                   const SizedBox(height: 12),
                   TextField(
-                    onChanged: (v) => _message = v,
-                    controller: TextEditingController(text: _message),
+                    controller: _messageCtrl,
                     style: GoogleFonts.cairo(color: AppTheme.textPrimary),
                     maxLines: 3,
                     decoration: InputDecoration(
